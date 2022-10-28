@@ -14,7 +14,7 @@ type person struct {
 }
 
 func main() {
-	jim := &person{
+	jim := person{
 		firstName: "Jim",
 		lastName:  "Party",
 		contact: contactInfo{
@@ -27,7 +27,7 @@ func main() {
 }
 
 func (p *person) updateName(newFirstName string) {
-	p.firstName = newFirstName
+	(*p).firstName = newFirstName
 }
 
 func (p *person) print() {
