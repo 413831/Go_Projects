@@ -2,6 +2,8 @@ package main
 
 import "fmt"
 
+// Liskov subtitution Principle
+
 type Sized interface {
 	GetWidth() int
 	SetWidth(width int)
