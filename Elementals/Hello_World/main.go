@@ -2,6 +2,11 @@ package main
 
 import "fmt"
 
+type School struct {
+	courses []string
+}
+
 func main() {
-	fmt.Println("Hi there!")
+	s := School{}
+	fmt.Println(len(s.courses))
 }
