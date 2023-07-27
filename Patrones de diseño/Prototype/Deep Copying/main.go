@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 )
 
@@ -14,6 +16,20 @@ func (a *Address) DeepCopy() *Address {
 		City:    a.City,
 		Country: a.Country,
 	}
+}
+
+func (p *Person) DeepCopySerialized() *Person {
+	b := bytes.Buffer{}
+	e := gob.NewEncoder(&b)
+	_ = e.Encode(p)
+
+	fmt.Println(string(b.Bytes()))
+
+	d := gob.NewDecoder(&b)
+	result := Person{}
+	_ = d.Decode(&result)
+
+	return &result
 }
 
 type Person struct {
