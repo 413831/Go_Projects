@@ -37,7 +37,7 @@ func (ch *CustomerHandlers) getAllCustomer(w http.ResponseWriter, r *http.Reques
 
 	customers, _ := ch.service.GetAllCustomer()
 
-	if r.Header.Get("COntent-Type") == "application/xml" {
+	if r.Header.Get("Content-Type") == "application/xml" {
 		w.Header().Add("Content-Type", "application/xml")
 		xml.NewEncoder(w).Encode(customers)
 	} else {
