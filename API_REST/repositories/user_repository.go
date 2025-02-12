@@ -1,18 +1,15 @@
 package respositories
 
-type User struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
+import models "project/models"
 
 type UserRepository interface {
-	GetAllUsers() []User
+	GetAllUsers() []models.User
 }
 
 type MockUserRepository struct{}
 
-func (m *MockUserRepository) GetAllUsers() []User {
-	return []User{
+func (m *MockUserRepository) GetAllUsers() []models.User {
+	return []models.User{
 		{
 			ID:   1,
 			Name: "Juan Perez",

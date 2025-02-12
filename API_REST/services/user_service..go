@@ -1,17 +1,20 @@
 package services
 
-import respositories "project/repositories"
+import (
+	models "project/models"
+	repositories "project/repositories"
+)
 
 type UserService struct {
-	repo respositories.UserRepository
+	repo repositories.UserRepository
 }
 
 func NewUserService() *UserService {
-	repo := &respositories.MockUserRepository{}
+	repo := &repositories.MockUserRepository{}
 
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) GetUsers() []respositories.User {
+func (s *UserService) GetUsers() []models.User {
 	return s.repo.GetAllUsers()
 }
