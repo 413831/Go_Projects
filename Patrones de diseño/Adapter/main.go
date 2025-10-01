@@ -1,131 +1,65 @@
 package main
 
 import (
-	"crypto/md5"
-	"encoding/json"
 	"fmt"
+
+	"Adapter/adapter"
+	"Adapter/geometry"
+	"Adapter/renderer"
 )
 
-func minmax(a, b int) (int, int) {
-	if a < b {
-		return a, b
-	} else {
-		return b, a
-	}
-}
-
-type Line struct {
-	X1, Y1, X2, Y2 int
-}
-
-type VectorImage struct {
-	Lines []Line
-}
-
-// interface given
-
-func NewRectangle(width, height int) *VectorImage {
-	width -= 1
-	height -= 1
-
-	return &VectorImage{[]Line{
-		{0, 0, width, 0},
-		{0, 0, 0, height},
-		{width, 0, width, height},
-		{0, height, width, height},
-	}}
-}
-
-// the interface we have
-
-type Point struct {
-	X, Y int
-}
-
-type RasterImage interface {
-	GetPoints() []Point
-}
-
-func DrawPoints(owner RasterImage) string {
-	maxX, maxY := 0, 0
-	points := owner.GetPoints()
-
-	for _, pixel := range points {
-		if pixel.X > maxX {
-			maxX = pixel.X
-		}
-		if pixel.Y > maxY {
-			maxY = pixel.Y
-		}
-	}
-
-	maxX += 1
-	maxY += 1
-
-	return ""
-}
-
-// solution
-type vectorToRasterAdapter struct {
-	points []Point
-}
-
-// we implement a cache to optimize object creation
-var pointCache = map[[16]byte][]Point{}
-
-func (v vectorToRasterAdapter) GetPoints() []Point {
-	return v.points
-}
-
-func (v *vectorToRasterAdapter) addLine(line Line) {
-	hash := func(obj interface{}) [16]byte {
-		bytes, _ := json.Marshal(obj)
-
-		return md5.Sum(bytes)
-	}
-
-	h := hash(line)
-
-	// we simply add to the adapter
-	if pts, ok := pointCache[h]; ok {
-		for _, pt := range pts {
-			v.points = append(v.points, pt)
-		}
-		return
-	}
-
-	left, right := minmax(line.X1, line.X2)
-	top, bottom := minmax(line.Y1, line.Y2)
-	dx := right - left
-	dy := line.Y2 - line.Y1
-
-	if dx == 0 {
-		for y := top; y <= bottom; y++ {
-			v.points = append(v.points, Point{left, y})
-		}
-	} else if dy == 0 {
-		for x := left; x <= right; x++ {
-			v.points = append(v.points, Point{x, top})
-		}
-	}
-
-	pointCache[h] = v.points
-	fmt.Println("generated", len(v.points), "points")
-}
-
-func VectorToRaster(vi *VectorImage) RasterImage {
-	adapter := vectorToRasterAdapter{}
-
-	for _, line := range vi.Lines {
-		adapter.addLine(line)
-	}
-
-	return adapter // as RasterImage
-}
-
+// main demuestra el uso del patrón Adapter para convertir imágenes vectoriales a rasterizadas
+//
+// PATRÓN ADAPTER:
+// El patrón Adapter permite que interfaces incompatibles trabajen juntas. En este caso:
+//   - Tenemos una interfaz VectorImage (basada en líneas) que no es compatible
+//   - Con una interfaz RasterImage (basada en puntos) que necesitamos usar
+//   - El adaptador vectorToRasterAdapter convierte automáticamente las líneas vectoriales
+//     en puntos rasterizados, permitiendo que ambas interfaces trabajen juntas
+//   - Esto es útil cuando tenemos código legacy o librerías que no podemos modificar
+//     pero necesitamos integrar con nuevas funcionalidades
+//
+// IMPLEMENTACIÓN:
+// 1. VectorImage: Define líneas con coordenadas (X1,Y1) -> (X2,Y2)
+// 2. RasterImage: Define puntos individuales (X,Y)
+// 3. vectorToRasterAdapter: Convierte líneas en puntos usando algoritmos de rasterización
+// 4. Caché: Optimiza conversiones repetidas almacenando resultados previamente calculados
+//
+// ARQUITECTURA MODULAR:
+// - geometry: Tipos y funciones geométricas (Point, Line, VectorImage, RasterImage)
+// - adapter: Implementación del patrón Adapter (VectorToRasterAdapter)
+// - renderer: Funciones de renderizado visual (DrawPoints)
+// - utils: Funciones utilitarias (Minmax, Abs)
+//
+// Crea un rectángulo vectorial, lo convierte a formato raster y procesa los puntos
+// La segunda conversión demuestra el uso del caché para optimizar conversiones repetidas
 func main() {
-	rc := NewRectangle(6, 4)
-	a := VectorToRaster(rc)
-	_ = VectorToRaster(rc)
-	fmt.Print(DrawPoints(a))
+	fmt.Println("=== Demostración del Patrón Adapter ===")
+	fmt.Println("Conversión de imágenes vectoriales a rasterizadas")
+	fmt.Println()
+
+	// Crea un rectángulo vectorial de 6x4
+	fmt.Println("1. Creando rectángulo vectorial de 6x4...")
+	rc := geometry.NewRectangle(6, 4)
+	fmt.Printf("   Líneas vectoriales creadas: %d\n", len(rc.Lines))
+	for i, line := range rc.Lines {
+		fmt.Printf("   Línea %d: (%d,%d) -> (%d,%d)\n", i+1, line.X1, line.Y1, line.X2, line.Y2)
+	}
+	fmt.Println()
+
+	// Convierte la imagen vectorial a rasterizada
+	fmt.Println("2. Convirtiendo a imagen rasterizada...")
+	a := adapter.VectorToRaster(rc)
+	fmt.Println()
+
+	// Segunda conversión para demostrar el uso del caché
+	fmt.Println("3. Segunda conversión (demostrando caché)...")
+	_ = adapter.VectorToRaster(rc)
+	fmt.Println()
+
+	// Procesa y muestra los puntos rasterizados
+	fmt.Println("4. Generando representación visual:")
+	fmt.Print(renderer.DrawPoints(a))
+
+	fmt.Println("=== Fin de la demostración ===")
 }
