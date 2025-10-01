@@ -1,0 +1,31 @@
+{
+    "$schema": "vscode://schemas/launch",
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch package",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "args": []
+        },
+        {
+            "name": "Test package",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "args": [
+                "-run",
+                ".",
+                "-race"
+            ]
+        }
+    ]
+}
+

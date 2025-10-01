@@ -1,0 +1,24 @@
+{
+    "go.useLanguageServer": true,
+    "go.formatTool": "gofumpt",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "go.lintTool": "golangci-lint",
+    "go.lintOnSave": "package",
+    "go.buildOnSave": "package",
+    "go.testExplorer.enable": true,
+    "go.testFlags": [
+        "-race"
+    ],
+    "files.eol": "\n",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "[go]": {
+        "editor.defaultFormatter": "golang.go",
+        "editor.formatOnSave": true
+    },
+    "go.toolsManagement.autoUpdate": true
+}
+

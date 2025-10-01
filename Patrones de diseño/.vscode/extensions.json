@@ -1,0 +1,15 @@
+{
+    "recommendations": [
+        "golang.go",
+        "golang.go-nightly",
+        "ms-vscode.test-adapter-converter",
+        "hbenl.vscode-test-explorer",
+        "eamodio.gitlens",
+        "usernamehw.errorlens",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        "editorconfig.editorconfig",
+        "humao.rest-client"
+    ]
+}
+
