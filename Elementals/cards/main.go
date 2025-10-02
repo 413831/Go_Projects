@@ -1,21 +1,24 @@
 package main
 
+// main es la función principal que demuestra el uso del sistema de cartas
+// Crea un nuevo mazo, lo mezcla y lo imprime
 func main() {
-	// -- EXAMPLE CODE --
-	// Initialization
+	// -- CÓDIGO DE EJEMPLO COMENTADO --
+	// Inicialización básica
 	//var card string = "Ace of Spades"
 	// card := newCard()
 	//fmt.Println("Example" + card)
 
-	// Slices
+	// Uso de slices
 	// cards := deck{"Ace of Diamonds", newCard()}
 	// cards = append(cards, "Six of Spades")
-
 	// cards.print()
 	// ---------------------------------------------
 
+	// Crea un nuevo mazo de cartas
 	cards := newDeck()
 
+	// Ejemplos de uso comentados:
 	//hand, remainingDeck := deal(cards, 5)
 	//hand.print()
 	//remainingDeck.print()
@@ -25,11 +28,15 @@ func main() {
 	// cardsNew := newDeckFromFile("my_card")
 	// cardsNew.print()
 	//
+
+	// Mezcla las cartas y las imprime
 	cards.shuffle()
 	cards.print()
 }
 
 /**
+// newCard es una función de ejemplo que retorna una carta específica
 func newCard() string {
 	return "Five of Diamonds"
-}**/
+}
+**/
