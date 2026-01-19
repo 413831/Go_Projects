@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/sony/gobreaker"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/sony/gobreaker"
 )
 
 const (
@@ -37,7 +38,7 @@ func stateChangeHandler(name string, from gobreaker.State, to gobreaker.State) {
 		log.Error().Msg("State Open")
 	}
 	if from == gobreaker.StateOpen && to == gobreaker.StateHalfOpen {
-		log.Info().Msg("Open State to Halg Open State")
+		log.Info().Msg("Open State to Half Open State")
 	}
 	if from == gobreaker.StateHalfOpen && to == gobreaker.StateClosed {
 		log.Info().Msg("Half Open State to Closed State")
@@ -76,8 +77,8 @@ func main() {
 		err  error
 	)
 
-	urlIncorrect := "http://localgost:8091"
-	urlCorrect := "http://localgost:8090"
+	urlIncorrect := "http://localhost:8091"
+	urlCorrect := "http://localhost:8090"
 
 	for i := 0; i < 20; i++ {
 		body, err = Get(urlIncorrect)
