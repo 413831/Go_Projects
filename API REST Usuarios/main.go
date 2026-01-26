@@ -20,7 +20,10 @@ import (
 
 func main() {
 	// Cargar configuración
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Error al cargar configuración: %v", err)
+	}
 
 	// Inicializar logger
 	logger := utils.GetLogger()

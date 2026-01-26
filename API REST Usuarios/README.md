@@ -43,16 +43,29 @@ Aplicación de ejemplo en Go para administrar usuarios con funcionalidades avanz
 go mod tidy
 ```
 
-3. Configurar variables de entorno (opcional):
-```bash
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_USER=postgres
-export DB_PASSWORD=postgres
-export DB_NAME=users_db
-export ENCRYPTION_KEY=tu-clave-de-32-bytes-aqui!!
-export SERVER_PORT=8080
-```
+3. Configurar variables de entorno:
+   
+   **IMPORTANTE**: Copia el archivo `.env.example` a `.env` y configura los valores:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Luego edita `.env` con tus valores. **NUNCA** subas el archivo `.env` al repositorio.
+   
+   Para generar claves seguras:
+   ```bash
+   # Generar ENCRYPTION_KEY (32 bytes en hexadecimal)
+   openssl rand -hex 32
+   
+   # Generar JWT_SECRET (64 caracteres aleatorios)
+   openssl rand -base64 48
+   ```
+   
+   **En producción**, asegúrate de:
+   - Definir todas las variables de entorno de seguridad
+   - Usar contraseñas fuertes para la base de datos
+   - Generar claves de encriptación únicas y seguras
+   - Establecer `ENV=production` para habilitar validaciones de seguridad
 
 4. Ejecutar migraciones SQL (ver `database/migrations.sql`)
 
@@ -159,12 +172,46 @@ La aplicación utiliza:
 - Validación de entrada
 - Borrado lógico en lugar de eliminación física
 
+## Seguridad
+
+### Variables de Entorno Requeridas en Producción
+
+En producción (`ENV=production`), las siguientes variables **DEBEN** estar definidas:
+
+- `ENCRYPTION_KEY`: Clave de 32 bytes exactos para encriptación AES-256
+- `JWT_SECRET`: Secret para tokens JWT (mínimo 32 caracteres, recomendado 64+)
+- `DB_PASSWORD`: Contraseña de la base de datos
+
+La aplicación validará automáticamente que estas variables no sean valores por defecto en producción.
+
+### Generación de Claves Seguras
+
+```bash
+# Generar ENCRYPTION_KEY (32 bytes)
+openssl rand -hex 32
+
+# Generar JWT_SECRET (64 caracteres)
+openssl rand -base64 48
+
+# O usando Python
+python3 -c "import secrets; print(secrets.token_hex(32))"  # Para ENCRYPTION_KEY
+python3 -c "import secrets; print(secrets.token_urlsafe(48))"  # Para JWT_SECRET
+```
+
+### Buenas Prácticas
+
+1. **NUNCA** subas archivos `.env` al repositorio (ya está en `.gitignore`)
+2. Usa un gestor de secretos en producción (AWS Secrets Manager, HashiCorp Vault, etc.)
+3. Rota las claves periódicamente
+4. Usa diferentes claves para cada entorno (desarrollo, staging, producción)
+5. Limita el acceso a las variables de entorno solo al personal autorizado
+
 ## Notas
 
 - La aplicación está configurada para usar un repositorio mock por defecto (sin base de datos)
 - Para usar PostgreSQL, descomentar las líneas en `main.go` y configurar la conexión
 - Las claves de encriptación deben ser de 32 bytes exactos
-- En producción, cambiar todas las claves por defecto
+- En desarrollo, se permiten valores por defecto, pero en producción se validan estrictamente
 
 ## Licencia
 
