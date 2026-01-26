@@ -1,0 +1,51 @@
+# Binarios
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/bin/
+/dist/
+
+# Archivos de entorno con secretos
+.env
+.env.local
+.env.*.local
+*.env
+
+# Logs
+*.log
+app.log
+logs/
+
+# Directorios de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos temporales
+tmp/
+temp/
+*.tmp
+
+# Archivos de configuración local
+config.local.yaml
+config.local.yml
+
+# Archivos de base de datos local
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos de cobertura
+coverage.out
+coverage.html
+*.coverprofile
