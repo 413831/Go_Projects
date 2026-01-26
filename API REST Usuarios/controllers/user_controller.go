@@ -1,4 +1,4 @@
-﻿package controllers
+package controllers
 
 import (
 	"encoding/json"
@@ -29,7 +29,7 @@ func NewUserController(userService *services.UserService, sessionService *servic
 func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var req models.CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		uc.respondWithError(w, http.StatusBadRequest, "Solicitud invÃ¡lida")
+		uc.respondWithError(w, http.StatusBadRequest, "Solicitud inválida")
 		return
 	}
 	if req.Username == "" || req.Email == "" || req.Password == "" {
@@ -49,7 +49,7 @@ func (uc *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
-		uc.respondWithError(w, http.StatusBadRequest, "ID invÃ¡lido")
+		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
 	user, err := uc.userService.GetByID(id)
@@ -89,12 +89,12 @@ func (uc *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
-		uc.respondWithError(w, http.StatusBadRequest, "ID invÃ¡lido")
+		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
 	var req models.UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		uc.respondWithError(w, http.StatusBadRequest, "Solicitud invÃ¡lida")
+		uc.respondWithError(w, http.StatusBadRequest, "Solicitud inválida")
 		return
 	}
 	user, err := uc.userService.Update(id, &req)
@@ -110,7 +110,7 @@ func (uc *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
-		uc.respondWithError(w, http.StatusBadRequest, "ID invÃ¡lido")
+		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
 	err = uc.userService.Delete(id)
@@ -126,12 +126,12 @@ func (uc *UserController) GrantRole(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
-		uc.respondWithError(w, http.StatusBadRequest, "ID invÃ¡lido")
+		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
 	var req models.GrantRoleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		uc.respondWithError(w, http.StatusBadRequest, "Solicitud invÃ¡lida")
+		uc.respondWithError(w, http.StatusBadRequest, "Solicitud inválida")
 		return
 	}
 	grantedBy := userID
@@ -148,12 +148,12 @@ func (uc *UserController) RevokeRole(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
-		uc.respondWithError(w, http.StatusBadRequest, "ID invÃ¡lido")
+		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
 	roleID, err := strconv.ParseInt(vars["role_id"], 10, 64)
 	if err != nil {
-		uc.respondWithError(w, http.StatusBadRequest, "Role ID invÃ¡lido")
+		uc.respondWithError(w, http.StatusBadRequest, "Role ID inválido")
 		return
 	}
 	err = uc.userService.RevokeRole(userID, roleID)
@@ -169,7 +169,7 @@ func (uc *UserController) GetUserSessions(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	userID, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
-		uc.respondWithError(w, http.StatusBadRequest, "ID invÃ¡lido")
+		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
 	sessions, err := uc.sessionService.GetUserSessions(userID)
