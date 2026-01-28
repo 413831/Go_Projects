@@ -1,4 +1,4 @@
-package handlers
+package internal
 
 import (
 	"encoding/json"
@@ -8,15 +8,22 @@ import (
 	"learning-go/domain"
 )
 
-func Hello(w http.ResponseWriter, r *http.Request) {
+type Handler struct {
+}
+
+func NewHandler() *Handler {
+	return &Handler{}
+}
+
+func (h *Handler) Hello(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World")
 }
 
-func CheckHealth(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Server is running")
 }
 
-func UserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 
 	var user domain.User

@@ -1,20 +1,24 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	repos "learning-go/internal/repos"
+	handlers "learning-go/internal/handlers"
 	"net/http"
 )
 
 func main() {
-	http.HandleFunc("/", Hello)
-
-	http.HandleFunc("/health", CheckHealth)
-
-	http.HandleFunc("/user", UserHandler)
-
-	http.ListenAndServe(":8080", nil)
+	/*r := internal.NewRouterHttp()
 
 	fmt.Println("Listening on port 8080")
 
+	if err := r.Run(":8080"); err != nil {
+		fmt.Errorf("error running server %s", err)
+	}*/
+
+	repo := repos.NewMockRepo()
+
+	handler := handlers.NewUserHandler(repo)
+	http.HandleFunc("/users", handler.GetUser)
+
+	http.ListenAndServe(":8080", nil)
 }
