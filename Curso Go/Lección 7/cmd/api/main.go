@@ -1,8 +1,8 @@
 package main
 
 import (
-	repos "learning-go/internal/repos"
 	handlers "learning-go/internal/handlers"
+	repos "learning-go/internal/repos"
 	"net/http"
 )
 
