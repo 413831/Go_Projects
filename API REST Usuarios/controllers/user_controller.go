@@ -12,13 +12,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// UserController implementa el controlador con patrones de diseño
 type UserController struct {
-	userService    *services.UserService
-	sessionService *services.SessionService
+	userService    services.UserServiceInterface
+	sessionService services.SessionServiceInterface
 	logger         *utils.Logger
 }
 
-func NewUserController(userService *services.UserService, sessionService *services.SessionService, logger *utils.Logger) *UserController {
+// NewUserController crea un nuevo controlador de usuarios
+func NewUserController(
+	userService services.UserServiceInterface,
+	sessionService services.SessionServiceInterface,
+	logger *utils.Logger,
+) *UserController {
 	return &UserController{
 		userService:    userService,
 		sessionService: sessionService,
@@ -32,17 +38,21 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 		uc.respondWithError(w, http.StatusBadRequest, "Solicitud inválida")
 		return
 	}
-	if req.Username == "" || req.Email == "" || req.Password == "" {
-		uc.respondWithError(w, http.StatusBadRequest, "Username, email y password son requeridos")
-		return
-	}
+
 	user, err := uc.userService.Create(&req)
 	if err != nil {
 		uc.logger.Error("Error al crear usuario: " + err.Error())
 		uc.respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	uc.respondWithJSON(w, http.StatusCreated, user)
+
+	// Usar Builder Pattern para construir respuesta
+	response := services.NewUserResponseBuilder(user).
+		WithRoles(user.Roles).
+		WithPII(user.PII).
+		Build()
+
+	uc.respondWithJSON(w, http.StatusCreated, response)
 }
 
 func (uc *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
@@ -52,12 +62,20 @@ func (uc *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
 		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
+
 	user, err := uc.userService.GetByID(id)
 	if err != nil {
 		uc.respondWithError(w, http.StatusNotFound, "Usuario no encontrado")
 		return
 	}
-	uc.respondWithJSON(w, http.StatusOK, user)
+
+	// Usar Builder Pattern para construir respuesta
+	response := services.NewUserResponseBuilder(user).
+		WithRoles(user.Roles).
+		WithPII(user.PII).
+		Build()
+
+	uc.respondWithJSON(w, http.StatusOK, response)
 }
 
 func (uc *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
@@ -69,19 +87,25 @@ func (uc *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	if pageSize == 0 {
 		pageSize = 10
 	}
+
 	users, total, err := uc.userService.GetAll(page, pageSize)
 	if err != nil {
 		uc.logger.Error("Error al obtener usuarios: " + err.Error())
 		uc.respondWithError(w, http.StatusInternalServerError, "Error al obtener usuarios")
 		return
 	}
-	response := map[string]interface{}{
-		"users":       users,
-		"total":       total,
-		"page":        page,
-		"page_size":   pageSize,
-		"total_pages": (total + pageSize - 1) / pageSize,
+
+	// Construir respuestas para cada usuario
+	var userResponses []interface{}
+	for _, user := range users {
+		response := services.NewUserResponseBuilder(user).
+			WithRoles(user.Roles).
+			Build()
+		userResponses = append(userResponses, response)
 	}
+
+	// Usar Builder Pattern para respuesta paginada
+	response := services.NewPaginatedResponseBuilder(userResponses, page, pageSize, total).Build()
 	uc.respondWithJSON(w, http.StatusOK, response)
 }
 
@@ -92,18 +116,27 @@ func (uc *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
+
 	var req models.UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		uc.respondWithError(w, http.StatusBadRequest, "Solicitud inválida")
 		return
 	}
+
 	user, err := uc.userService.Update(id, &req)
 	if err != nil {
 		uc.logger.Error("Error al actualizar usuario: " + err.Error())
 		uc.respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	uc.respondWithJSON(w, http.StatusOK, user)
+
+	// Usar Builder Pattern para construir respuesta
+	response := services.NewUserResponseBuilder(user).
+		WithRoles(user.Roles).
+		WithPII(user.PII).
+		Build()
+
+	uc.respondWithJSON(w, http.StatusOK, response)
 }
 
 func (uc *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -113,12 +146,14 @@ func (uc *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
+
 	err = uc.userService.Delete(id)
 	if err != nil {
 		uc.logger.Error("Error al eliminar usuario: " + err.Error())
 		uc.respondWithError(w, http.StatusInternalServerError, "Error al eliminar usuario")
 		return
 	}
+
 	uc.respondWithJSON(w, http.StatusOK, map[string]string{"message": "Usuario eliminado correctamente"})
 }
 
@@ -129,11 +164,13 @@ func (uc *UserController) GrantRole(w http.ResponseWriter, r *http.Request) {
 		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
+
 	var req models.GrantRoleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		uc.respondWithError(w, http.StatusBadRequest, "Solicitud inválida")
 		return
 	}
+
 	grantedBy := userID
 	err = uc.userService.GrantRole(userID, req.RoleID, grantedBy)
 	if err != nil {
@@ -141,6 +178,7 @@ func (uc *UserController) GrantRole(w http.ResponseWriter, r *http.Request) {
 		uc.respondWithError(w, http.StatusInternalServerError, "Error al otorgar rol")
 		return
 	}
+
 	uc.respondWithJSON(w, http.StatusOK, map[string]string{"message": "Rol otorgado correctamente"})
 }
 
@@ -151,17 +189,20 @@ func (uc *UserController) RevokeRole(w http.ResponseWriter, r *http.Request) {
 		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
+
 	roleID, err := strconv.ParseInt(vars["role_id"], 10, 64)
 	if err != nil {
 		uc.respondWithError(w, http.StatusBadRequest, "Role ID inválido")
 		return
 	}
+
 	err = uc.userService.RevokeRole(userID, roleID)
 	if err != nil {
 		uc.logger.Error("Error al revocar rol: " + err.Error())
 		uc.respondWithError(w, http.StatusInternalServerError, "Error al revocar rol")
 		return
 	}
+
 	uc.respondWithJSON(w, http.StatusOK, map[string]string{"message": "Rol revocado correctamente"})
 }
 
@@ -172,12 +213,14 @@ func (uc *UserController) GetUserSessions(w http.ResponseWriter, r *http.Request
 		uc.respondWithError(w, http.StatusBadRequest, "ID inválido")
 		return
 	}
+
 	sessions, err := uc.sessionService.GetUserSessions(userID)
 	if err != nil {
 		uc.logger.Error("Error al obtener sesiones: " + err.Error())
 		uc.respondWithError(w, http.StatusInternalServerError, "Error al obtener sesiones")
 		return
 	}
+
 	uc.respondWithJSON(w, http.StatusOK, sessions)
 }
 

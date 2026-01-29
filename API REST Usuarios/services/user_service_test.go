@@ -6,25 +6,19 @@ import (
 
 	"api-rest-usuarios/models"
 	"api-rest-usuarios/repositories"
-	"api-rest-usuarios/utils"
 )
 
-// MockConfigProvider implementa ConfigProvider para tests
-type MockConfigProvider struct {
-	cost int
-}
-
-func (m *MockConfigProvider) GetBCryptCost() int {
-	return m.cost
-}
-
 func TestUserService_Create(t *testing.T) {
-	repo := repositories.NewMockUserRepository()
-	encryptionService, _ := utils.NewEncryptionService("12345678901234567890123456789012") // 32 bytes exactos
-	logger := utils.GetLogger()
-	config := &MockConfigProvider{cost: 10}
+	userRepo := repositories.NewMockUserRepositoryImpl()
+	roleRepo := repositories.NewMockRoleRepositoryImpl()
+	piiRepo := repositories.NewMockPIIRepositoryImpl()
 
-	service := NewUserService(repo, encryptionService, logger, config)
+	hasher := NewBCryptPasswordHasher(10)
+	encryptor, _ := NewAESEncryptor("12345678901234567890123456789012")
+	validator := NewUserValidator()
+	publisher := NewEventPublisher()
+
+	service := NewUserService(userRepo, roleRepo, piiRepo, hasher, encryptor, validator, publisher)
 
 	req := &models.CreateUserRequest{
 		Username: "testuser",
@@ -51,12 +45,16 @@ func TestUserService_Create(t *testing.T) {
 }
 
 func TestUserService_GetByID(t *testing.T) {
-	repo := repositories.NewMockUserRepository()
-	encryptionService, _ := utils.NewEncryptionService("12345678901234567890123456789012") // 32 bytes exactos
-	logger := utils.GetLogger()
-	config := &MockConfigProvider{cost: 10}
+	userRepo := repositories.NewMockUserRepositoryImpl()
+	roleRepo := repositories.NewMockRoleRepositoryImpl()
+	piiRepo := repositories.NewMockPIIRepositoryImpl()
 
-	service := NewUserService(repo, encryptionService, logger, config)
+	hasher := NewBCryptPasswordHasher(10)
+	encryptor, _ := NewAESEncryptor("12345678901234567890123456789012")
+	validator := NewUserValidator()
+	publisher := NewEventPublisher()
+
+	service := NewUserService(userRepo, roleRepo, piiRepo, hasher, encryptor, validator, publisher)
 
 	// Crear usuario primero
 	req := &models.CreateUserRequest{
@@ -78,12 +76,16 @@ func TestUserService_GetByID(t *testing.T) {
 }
 
 func TestUserService_Update(t *testing.T) {
-	repo := repositories.NewMockUserRepository()
-	encryptionService, _ := utils.NewEncryptionService("12345678901234567890123456789012") // 32 bytes exactos
-	logger := utils.GetLogger()
-	config := &MockConfigProvider{cost: 10}
+	userRepo := repositories.NewMockUserRepositoryImpl()
+	roleRepo := repositories.NewMockRoleRepositoryImpl()
+	piiRepo := repositories.NewMockPIIRepositoryImpl()
 
-	service := NewUserService(repo, encryptionService, logger, config)
+	hasher := NewBCryptPasswordHasher(10)
+	encryptor, _ := NewAESEncryptor("12345678901234567890123456789012")
+	validator := NewUserValidator()
+	publisher := NewEventPublisher()
+
+	service := NewUserService(userRepo, roleRepo, piiRepo, hasher, encryptor, validator, publisher)
 
 	// Crear usuario
 	req := &models.CreateUserRequest{
@@ -110,12 +112,16 @@ func TestUserService_Update(t *testing.T) {
 }
 
 func TestUserService_Delete(t *testing.T) {
-	repo := repositories.NewMockUserRepository()
-	encryptionService, _ := utils.NewEncryptionService("12345678901234567890123456789012") // 32 bytes exactos
-	logger := utils.GetLogger()
-	config := &MockConfigProvider{cost: 10}
+	userRepo := repositories.NewMockUserRepositoryImpl()
+	roleRepo := repositories.NewMockRoleRepositoryImpl()
+	piiRepo := repositories.NewMockPIIRepositoryImpl()
 
-	service := NewUserService(repo, encryptionService, logger, config)
+	hasher := NewBCryptPasswordHasher(10)
+	encryptor, _ := NewAESEncryptor("12345678901234567890123456789012")
+	validator := NewUserValidator()
+	publisher := NewEventPublisher()
+
+	service := NewUserService(userRepo, roleRepo, piiRepo, hasher, encryptor, validator, publisher)
 
 	// Crear usuario
 	req := &models.CreateUserRequest{
@@ -139,12 +145,16 @@ func TestUserService_Delete(t *testing.T) {
 }
 
 func TestUserService_GrantRole(t *testing.T) {
-	repo := repositories.NewMockUserRepository()
-	encryptionService, _ := utils.NewEncryptionService("12345678901234567890123456789012") // 32 bytes exactos
-	logger := utils.GetLogger()
-	config := &MockConfigProvider{cost: 10}
+	userRepo := repositories.NewMockUserRepositoryImpl()
+	roleRepo := repositories.NewMockRoleRepositoryImpl()
+	piiRepo := repositories.NewMockPIIRepositoryImpl()
 
-	service := NewUserService(repo, encryptionService, logger, config)
+	hasher := NewBCryptPasswordHasher(10)
+	encryptor, _ := NewAESEncryptor("12345678901234567890123456789012")
+	validator := NewUserValidator()
+	publisher := NewEventPublisher()
+
+	service := NewUserService(userRepo, roleRepo, piiRepo, hasher, encryptor, validator, publisher)
 
 	// Crear usuario
 	req := &models.CreateUserRequest{
@@ -168,12 +178,16 @@ func TestUserService_GrantRole(t *testing.T) {
 }
 
 func TestUserService_SavePII(t *testing.T) {
-	repo := repositories.NewMockUserRepository()
-	encryptionService, _ := utils.NewEncryptionService("12345678901234567890123456789012") // 32 bytes exactos
-	logger := utils.GetLogger()
-	config := &MockConfigProvider{cost: 10}
+	userRepo := repositories.NewMockUserRepositoryImpl()
+	roleRepo := repositories.NewMockRoleRepositoryImpl()
+	piiRepo := repositories.NewMockPIIRepositoryImpl()
 
-	service := NewUserService(repo, encryptionService, logger, config)
+	hasher := NewBCryptPasswordHasher(10)
+	encryptor, _ := NewAESEncryptor("12345678901234567890123456789012")
+	validator := NewUserValidator()
+	publisher := NewEventPublisher()
+
+	service := NewUserService(userRepo, roleRepo, piiRepo, hasher, encryptor, validator, publisher)
 
 	// Crear usuario
 	req := &models.CreateUserRequest{

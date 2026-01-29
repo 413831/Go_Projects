@@ -6,17 +6,16 @@ import (
 
 	"api-rest-usuarios/models"
 	"api-rest-usuarios/repositories"
-	"api-rest-usuarios/utils"
 )
 
 func TestSessionService_CreateSession(t *testing.T) {
-	repo := repositories.NewMockUserRepository()
-	logger := utils.GetLogger()
+	sessionRepo := repositories.NewMockSessionRepositoryImpl()
+	userRepo := repositories.NewMockUserRepositoryImpl()
+	publisher := NewEventPublisher()
 
-	service := NewSessionService(repo, logger)
+	service := NewSessionService(sessionRepo, userRepo, publisher)
 
 	// Crear usuario primero
-	userRepo := repositories.NewMockUserRepository()
 	user := &models.User{
 		ID:       1,
 		Username: "testuser",
@@ -46,10 +45,11 @@ func TestSessionService_CreateSession(t *testing.T) {
 }
 
 func TestSessionService_ValidateSession(t *testing.T) {
-	repo := repositories.NewMockUserRepository()
-	logger := utils.GetLogger()
+	sessionRepo := repositories.NewMockSessionRepositoryImpl()
+	userRepo := repositories.NewMockUserRepositoryImpl()
+	publisher := NewEventPublisher()
 
-	service := NewSessionService(repo, logger)
+	service := NewSessionService(sessionRepo, userRepo, publisher)
 
 	// Crear sesión
 	session, _ := service.CreateSession(1, "127.0.0.1", "test-agent")
@@ -66,10 +66,11 @@ func TestSessionService_ValidateSession(t *testing.T) {
 }
 
 func TestSessionService_ValidateSession_Expired(t *testing.T) {
-	repo := repositories.NewMockUserRepository()
-	logger := utils.GetLogger()
+	sessionRepo := repositories.NewMockSessionRepositoryImpl()
+	userRepo := repositories.NewMockUserRepositoryImpl()
+	publisher := NewEventPublisher()
 
-	service := NewSessionService(repo, logger)
+	service := NewSessionService(sessionRepo, userRepo, publisher)
 
 	// Crear sesión expirada manualmente
 	session := &models.Session{
@@ -78,7 +79,7 @@ func TestSessionService_ValidateSession_Expired(t *testing.T) {
 		ExpiresAt: time.Now().Add(-1 * time.Hour), // Expiró hace 1 hora
 		Active:    true,
 	}
-	repo.CreateSession(session)
+	sessionRepo.CreateSession(session)
 
 	// Intentar validar sesión expirada
 	_, err := service.ValidateSession("expired-token")
@@ -88,10 +89,11 @@ func TestSessionService_ValidateSession_Expired(t *testing.T) {
 }
 
 func TestSessionService_GetUserSessions(t *testing.T) {
-	repo := repositories.NewMockUserRepository()
-	logger := utils.GetLogger()
+	sessionRepo := repositories.NewMockSessionRepositoryImpl()
+	userRepo := repositories.NewMockUserRepositoryImpl()
+	publisher := NewEventPublisher()
 
-	service := NewSessionService(repo, logger)
+	service := NewSessionService(sessionRepo, userRepo, publisher)
 
 	// Crear múltiples sesiones
 	service.CreateSession(1, "127.0.0.1", "agent1")

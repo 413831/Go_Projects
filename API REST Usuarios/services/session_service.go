@@ -9,35 +9,62 @@ import (
 
 	"api-rest-usuarios/models"
 	"api-rest-usuarios/repositories"
-	"api-rest-usuarios/utils"
 )
 
-// SessionService maneja la lógica de negocio de sesiones
+// SessionServiceInterface define la interfaz para el servicio de sesiones
+type SessionServiceInterface interface {
+	CreateSession(userID int64, ipAddress, userAgent string) (*models.Session, error)
+	ValidateSession(token string) (*models.Session, error)
+	GetUserSessions(userID int64) ([]*models.Session, error)
+	DeactivateSession(sessionID int64) error
+	Stop()
+}
+
+// SessionService implementa SessionServiceInterface con patrones de diseño
 type SessionService struct {
-	repo           repositories.UserRepository
-	logger         *utils.Logger
+	sessionRepo    repositories.SessionRepository
+	userRepo       repositories.UserRepository
+	eventPublisher EventPublisher
 	cleanupChannel chan bool
 	cleanupWG      sync.WaitGroup
 	mu             sync.Mutex
 }
 
-// NewSessionService crea un nuevo servicio de sesiones
-func NewSessionService(repo repositories.UserRepository, logger *utils.Logger) *SessionService {
+// NewSessionService crea una nueva instancia del servicio de sesiones
+func NewSessionService(
+	sessionRepo repositories.SessionRepository,
+	userRepo repositories.UserRepository,
+	eventPublisher EventPublisher,
+) SessionServiceInterface {
 	ss := &SessionService{
-		repo:           repo,
-		logger:         logger,
+		sessionRepo:    sessionRepo,
+		userRepo:       userRepo,
+		eventPublisher: eventPublisher,
 		cleanupChannel: make(chan bool),
 	}
+	
 	// Iniciar goroutine para limpieza periódica de sesiones
 	go ss.startCleanupRoutine()
+	
 	return ss
 }
 
-// CreateSession crea una nueva sesión para un usuario
+// NewSessionServiceV2 mantiene compatibilidad con application_v2/factory.
+func NewSessionServiceV2(
+	sessionRepo repositories.SessionRepository,
+	userRepo repositories.UserRepository,
+	eventPublisher EventPublisher,
+) SessionServiceInterface {
+	return NewSessionService(sessionRepo, userRepo, eventPublisher)
+}
+
 func (ss *SessionService) CreateSession(userID int64, ipAddress, userAgent string) (*models.Session, error) {
 	token, err := generateToken()
 	if err != nil {
-		ss.logger.Error("Error al generar token: " + err.Error())
+		ss.eventPublisher.Publish(NewUserEvent("error.occurred", &ErrorData{
+			UserID:  userID,
+			Message: fmt.Sprintf("Error generando token: %v", err),
+		}))
 		return nil, err
 	}
 
@@ -50,49 +77,58 @@ func (ss *SessionService) CreateSession(userID int64, ipAddress, userAgent strin
 		Active:    true,
 	}
 
-	err = ss.repo.CreateSession(session)
+	err = ss.sessionRepo.CreateSession(session)
 	if err != nil {
-		ss.logger.Error("Error al crear sesión: " + err.Error())
+		ss.eventPublisher.Publish(NewUserEvent("error.occurred", &ErrorData{
+			UserID:  userID,
+			Message: fmt.Sprintf("Error creando sesión: %v", err),
+		}))
 		return nil, err
 	}
 
-	ss.logger.Info(fmt.Sprintf("Sesión creada para usuario ID: %d", userID))
+	// Publicar evento de sesión creada
+	ss.eventPublisher.Publish(NewUserEvent("session.created", &SessionData{
+		SessionID: session.ID,
+		UserID:    session.UserID,
+		Token:     session.Token,
+		IPAddress: session.IPAddress,
+	}))
+
 	return session, nil
 }
 
-// ValidateSession valida si una sesión es válida
 func (ss *SessionService) ValidateSession(token string) (*models.Session, error) {
-	session, err := ss.repo.GetSessionByToken(token)
+	session, err := ss.sessionRepo.GetSessionByToken(token)
 	if err != nil {
 		return nil, err
 	}
 
 	if time.Now().After(session.ExpiresAt) {
-		ss.repo.DeactivateSession(session.ID)
+		ss.sessionRepo.DeactivateSession(session.ID)
 		return nil, ErrSessionExpired
 	}
 
 	// Actualizar última actividad en goroutine para no bloquear
 	go func() {
-		ss.repo.UpdateSessionActivity(session.ID)
+		ss.sessionRepo.UpdateSessionActivity(session.ID)
 	}()
 
 	return session, nil
 }
 
-// GetUserSessions obtiene todas las sesiones activas de un usuario
 func (ss *SessionService) GetUserSessions(userID int64) ([]*models.Session, error) {
-	return ss.repo.GetUserSessions(userID)
+	return ss.sessionRepo.GetUserSessions(userID)
 }
 
-// DeactivateSession desactiva una sesión
 func (ss *SessionService) DeactivateSession(sessionID int64) error {
-	err := ss.repo.DeactivateSession(sessionID)
+	err := ss.sessionRepo.DeactivateSession(sessionID)
 	if err != nil {
-		ss.logger.Error("Error al desactivar sesión: " + err.Error())
+		ss.eventPublisher.Publish(NewUserEvent("error.occurred", &ErrorData{
+			Message: fmt.Sprintf("Error desactivando sesión %d: %v", sessionID, err),
+		}))
 		return err
 	}
-	ss.logger.Info(fmt.Sprintf("Sesión desactivada ID: %d", sessionID))
+
 	return nil
 }
 
@@ -123,11 +159,11 @@ func (ss *SessionService) cleanupExpiredSessions() {
 	
 	go func() {
 		defer wg.Done()
-		err := ss.repo.CleanExpiredSessions()
+		err := ss.sessionRepo.CleanExpiredSessions()
 		if err != nil {
-			ss.logger.Error("Error al limpiar sesiones expiradas: " + err.Error())
-		} else {
-			ss.logger.Info("Sesiones expiradas limpiadas")
+			ss.eventPublisher.Publish(NewUserEvent("error.occurred", &ErrorData{
+				Message: fmt.Sprintf("Error limpiando sesiones expiradas: %v", err),
+			}))
 		}
 	}()
 
@@ -149,8 +185,10 @@ func generateToken() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
+// ErrSessionExpired error para sesión expirada
 var ErrSessionExpired = &SessionError{Message: "sesión expirada"}
 
+// SessionError representa un error de sesión
 type SessionError struct {
 	Message string
 }

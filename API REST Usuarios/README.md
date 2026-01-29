@@ -20,6 +20,7 @@ Aplicación de ejemplo en Go para administrar usuarios con funcionalidades avanz
 
 ```
 .
+├── app/             # Orquestación de la aplicación y ciclo de vida
 ├── config/          # Configuración de la aplicación
 ├── controllers/     # Controladores HTTP
 ├── database/        # Conexión y migraciones SQL
@@ -73,6 +74,8 @@ go mod tidy
 ```bash
 go run main.go
 ```
+
+El `main.go` es mínimo: carga configuración y delega la inicialización completa a `app.Application`.
 
 ## Endpoints
 
@@ -156,6 +159,7 @@ go test -cover ./...
 - **Dependency Injection**: Inyección de dependencias para bajo acoplamiento
 - **Singleton**: Logger como singleton
 - **Factory**: Creación de servicios y repositorios
+- **Application/Bootstrap**: Orquestación centralizada en `app/Application`
 
 ## Concurrencia
 
@@ -209,9 +213,10 @@ python3 -c "import secrets; print(secrets.token_urlsafe(48))"  # Para JWT_SECRET
 ## Notas
 
 - La aplicación está configurada para usar un repositorio mock por defecto (sin base de datos)
-- Para usar PostgreSQL, descomentar las líneas en `main.go` y configurar la conexión
+- Para usar PostgreSQL, modifica la inicialización en `app/application.go` y configura la conexión
 - Las claves de encriptación deben ser de 32 bytes exactos
 - En desarrollo, se permiten valores por defecto, pero en producción se validan estrictamente
+- `main.go` es mínimo: solo carga configuración y delega en `app.Application`
 
 ## Licencia
 

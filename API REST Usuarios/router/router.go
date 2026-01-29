@@ -1,14 +1,24 @@
 package router
 
 import (
-	"api-rest-usuarios/controllers"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
+type userControllerHandlers interface {
+	CreateUser(w http.ResponseWriter, r *http.Request)
+	GetAllUsers(w http.ResponseWriter, r *http.Request)
+	GetUser(w http.ResponseWriter, r *http.Request)
+	UpdateUser(w http.ResponseWriter, r *http.Request)
+	DeleteUser(w http.ResponseWriter, r *http.Request)
+	GrantRole(w http.ResponseWriter, r *http.Request)
+	RevokeRole(w http.ResponseWriter, r *http.Request)
+	GetUserSessions(w http.ResponseWriter, r *http.Request)
+}
+
 // SetupRouter configura todas las rutas de la aplicación
-func SetupRouter(userController *controllers.UserController) *mux.Router {
+func SetupRouter(userController userControllerHandlers) *mux.Router {
 	r := mux.NewRouter()
 
 	// Middleware para CORS y logging
